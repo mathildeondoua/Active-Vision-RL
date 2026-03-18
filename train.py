@@ -33,11 +33,21 @@ def main():
         rewards = []
         class_losses = []
         
-        # Entropie initiale très haute (incertitude max)
-        last_entropy = torch.tensor([2.3]) # ln(10) ~ 2.3
+        # --- NOUVEAU : Calcul de l'entropie initiale (Tour à vide) ---
+        patch_init = torch.tensor(obs['patch']).unsqueeze(0)
+        loc_init = torch.tensor(obs['loc']).unsqueeze(0)
+        with torch.no_grad():
+            logits_init, _, _, _ = agent(patch_init, loc_init, h_t, c_t)
+            last_entropy = compute_entropy(logits_init)
+            
+        # Initialisation des compteurs pour l'affichage
+        steps = 0
+        entropy_trajectory = [last_entropy.item()]
         
         done = False
         while not done:
+            steps += 1 # On compte le déplacement
+            
             # Conversion des observations pour PyTorch (ajout dimension Batch)
             patch = torch.tensor(obs['patch']).unsqueeze(0)
             loc = torch.tensor(obs['loc']).unsqueeze(0)
@@ -54,11 +64,14 @@ def main():
             
             # --- CALCUL DE LA RÉCOMPENSE INTELLIGENTE ---
             current_entropy = compute_entropy(class_logits)
+            entropy_trajectory.append(current_entropy.item()) # On archive pour le log
+            
             ENTROPY_SCALE = 5
+            
             if action < 4 and not truncated: 
-                # C'est un mouvement ! Reward = (Baisse entropie) + pénalité de temps de l'env (-0.05)
+                # C'est un mouvement ! Reward = (Baisse entropie * scale)
                 entropy_drop = (last_entropy - current_entropy).item()
-                reward = entropy_drop*ENTROPY_SCALE
+                reward = entropy_drop * ENTROPY_SCALE
             else:
                 # C'est l'action STOP ! Calcul du Jackpot
                 prediction = torch.argmax(class_logits, dim=-1).item()
@@ -97,8 +110,13 @@ def main():
         total_loss.backward()
         optimizer.step()
         
+        # --- NOUVEAU : Affichage détaillé des logs ---
         if (episode + 1) % 50 == 0:
-            print(f"Épisode {episode+1}/{num_episodes} | Récompense Totale: {R:.2f} | Action Finale: {action}")
+            traj_str = " -> ".join([f"{e:.2f}" for e in entropy_trajectory])
+            print(f"Épisode {episode+1}/{num_episodes} | Étapes: {steps} | R Totale: {R:.2f} | Action Finale: {action}")
+            print(f"   Trajectoire Entropie : [{traj_str}]")
+            print("-" * 60)
+            
     torch.save(agent.state_dict(), 'agent_weights.pth')
     print("Entraînement terminé !")
 
