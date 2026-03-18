@@ -31,11 +31,10 @@ class GlimpseEnv(gym.Env):
         self.action_space = spaces.Discrete(5)
         
         # Espace d'observation : Un patch 8x8 en niveaux de gris (1 canal)
-        self.observation_space = spaces.Box(
-            low=0.0, high=1.0, 
-            shape=(1, self.patch_size, self.patch_size), 
-            dtype=np.float32
-        )
+        self.observation_space = spaces.Dict({
+            "patch": spaces.Box(low=0.0, high=1.0, shape=(1, self.patch_size, self.patch_size), dtype=np.float32),
+            "loc": spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
+        })
 
     def _get_patch(self):
         """Découpe l'image autour des coordonnées actuelles (x, y)."""
@@ -63,6 +62,16 @@ class GlimpseEnv(gym.Env):
         # Ajout de la dimension "canal" pour PyTorch (1, H, W)
         return np.expand_dims(patch, axis=0).astype(np.float32)
 
+    def _get_obs(self):
+        """Fonction utilitaire pour regrouper le patch et la localisation"""
+        patch = self._get_patch()
+        # On normalise les coordonnées entre -1 et 1 pour aider le réseau de neurones
+        loc_x = (self.x / (self.image_size / 2.0)) - 1.0
+        loc_y = (self.y / (self.image_size / 2.0)) - 1.0
+        loc = np.array([loc_x, loc_y], dtype=np.float32)
+        
+        return {"patch": patch, "loc": loc}
+        
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         
@@ -71,15 +80,15 @@ class GlimpseEnv(gym.Env):
         self.current_image = self.images[idx]
         self.current_label = self.labels[idx]
         
-        # 2. Placer l'agent au centre
-        self.x = self.image_size // 2
-        self.y = self.image_size // 2
+        # 2. Placer l'agent aléatoirement sur l'image
+        self.x = self.np_random.integers(0, self.image_size)
+        self.y = self.np_random.integers(0, self.image_size)
         self.step_count = 0
         
-        # 3. Renvoyer la première observation
-        obs = self._get_patch()
+        # 3. On renvoie le dictionnaire
+        obs = self._get_obs()
         return obs, {}
-
+        
     def step(self, action):
         self.step_count += 1
         reward = 0.0
@@ -106,6 +115,6 @@ class GlimpseEnv(gym.Env):
         if self.step_count >= self.max_steps:
             truncated = True
 
-        obs = self._get_patch()
+        obs = self._get_obs()
 
         return obs, reward, terminated, truncated, info
