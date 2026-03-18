@@ -101,6 +101,9 @@ class GlimpseEnv(gym.Env):
         elif action == 1: self.y += self.step_size # Bas
         elif action == 2: self.x -= self.step_size # Gauche
         elif action == 3: self.x += self.step_size # Droite
+
+        self.x = int(np.clip(self.x, 0, self.image_size))
+        self.y = int(np.clip(self.y, 0, self.image_size))
         
         # Si mouvement, on applique une petite pénalité de temps
         if action in [0, 1, 2, 3]:
