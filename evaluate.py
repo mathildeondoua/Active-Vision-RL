@@ -5,9 +5,8 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix, accuracy_score
 import torchvision
 
-# Assure-toi d'importer tes classes si tu es dans un script séparé
-# from env import GlimpseEnv
-# from agent import RAMAgent
+from env import GlimpseEnv
+from agent import RAMAgent
 
 def evaluate_agent(agent, env, num_episodes=1000):
     print(f"Début de l'évaluation sur {num_episodes} images...")
