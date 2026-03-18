@@ -12,7 +12,7 @@ def main():
     images = mnist.data.numpy()[:10000] # On prend 1000 images pour tester vite
     labels = mnist.targets.numpy()[:10000]
     
-    env = GlimpseEnv(images, labels, patch_size=8, step_size=4, max_steps=20)
+    env = GlimpseEnv(images, labels, patch_size=8, step_size=2, max_steps=20)
     
     print("2. Initialisation de l'Agent et de l'Optimiseur...")
     agent = RAMAgent(patch_size=8, hidden_size=128, num_classes=10, num_actions=5)
@@ -66,7 +66,7 @@ def main():
             current_entropy = compute_entropy(class_logits)
             entropy_trajectory.append(current_entropy.item())
             
-            ENTROPY_SCALE = 5
+            ENTROPY_SCALE = 20
             
             if action < 4 and not truncated: 
                 # C'est un mouvement ! 
