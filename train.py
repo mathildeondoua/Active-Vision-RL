@@ -58,7 +58,7 @@ def main():
             if action < 4 and not truncated: 
                 # C'est un mouvement ! Reward = (Baisse entropie) + pénalité de temps de l'env (-0.05)
                 entropy_drop = (last_entropy - current_entropy).item()
-                reward = entropy_drop
+                reward = entropy_drop*ENTROPY_SCALE
             else:
                 # C'est l'action STOP ! Calcul du Jackpot
                 prediction = torch.argmax(class_logits, dim=-1).item()
