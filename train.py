@@ -12,14 +12,14 @@ def main():
     images = mnist.data.numpy()[:1000] # On prend 1000 images pour tester vite
     labels = mnist.targets.numpy()[:1000]
     
-    env = GlimpseEnv(images, labels, patch_size=8, step_size=4, max_steps=10)
+    env = GlimpseEnv(images, labels, patch_size=8, step_size=4, max_steps=20)
     
     print("2. Initialisation de l'Agent et de l'Optimiseur...")
     agent = RAMAgent(patch_size=8, hidden_size=128, num_classes=10, num_actions=5)
     optimizer = optim.Adam(agent.parameters(), lr=1e-3)
     criterion_class = nn.CrossEntropyLoss() # Pour entraîner l'Analyste
     
-    num_episodes = 3000
+    num_episodes = 2000
     
     print("3. Début de l'entraînement hybride !")
     for episode in range(num_episodes):
