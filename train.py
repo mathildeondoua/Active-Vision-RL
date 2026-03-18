@@ -99,7 +99,7 @@ def main():
         
         if (episode + 1) % 50 == 0:
             print(f"Épisode {episode+1}/{num_episodes} | Récompense Totale: {R:.2f} | Action Finale: {action}")
-
+    torch.save(agent.state_dict(), 'agent_weights.pth')
     print("Entraînement terminé !")
 
 if __name__ == "__main__":
