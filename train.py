@@ -9,8 +9,8 @@ import numpy as np
 def main():
     print("1. Préparation des données et de l'Environnement...")
     mnist = torchvision.datasets.MNIST(root='./data', train=True, download=True)
-    images = mnist.data.numpy()[:1000] # On prend 1000 images pour tester vite
-    labels = mnist.targets.numpy()[:1000]
+    images = mnist.data.numpy()[:10000] # On prend 1000 images pour tester vite
+    labels = mnist.targets.numpy()[:10000]
     
     env = GlimpseEnv(images, labels, patch_size=8, step_size=4, max_steps=20)
     
@@ -19,7 +19,7 @@ def main():
     optimizer = optim.Adam(agent.parameters(), lr=1e-3)
     criterion_class = nn.CrossEntropyLoss() # Pour entraîner l'Analyste
     
-    num_episodes = 2000
+    num_episodes = 15000
     
     print("3. Début de l'entraînement hybride !")
     for episode in range(num_episodes):
@@ -64,31 +64,32 @@ def main():
             
             # --- CALCUL DE LA RÉCOMPENSE INTELLIGENTE ---
             current_entropy = compute_entropy(class_logits)
-            entropy_trajectory.append(current_entropy.item()) # On archive pour le log
+            entropy_trajectory.append(current_entropy.item())
             
             ENTROPY_SCALE = 5
             
             if action < 4 and not truncated: 
-                # C'est un mouvement ! Reward = (Baisse entropie * scale)
+                # C'est un mouvement ! 
                 entropy_drop = (last_entropy - current_entropy).item()
                 reward = entropy_drop * ENTROPY_SCALE
             else:
-                # C'est l'action STOP ! Calcul du Jackpot
+                # C'est l'action STOP ! L'agent rend sa copie.
                 prediction = torch.argmax(class_logits, dim=-1).item()
                 true_label = env.current_label
                 if prediction == true_label:
                     reward = +2.0 # Jackpot !
                 else:
                     reward = -1.0 # Mauvaise réponse
+                
+                # CORRECTION CRUCIALE : On calcule l'erreur du classifieur 
+                # UNIQUEMENT sur sa décision finale !
+                true_label_tensor = torch.tensor([env.current_label], dtype=torch.long)
+                loss_c = criterion_class(class_logits, true_label_tensor)
+                class_losses.append(loss_c)
             
             # On stocke pour l'apprentissage de fin d'épisode
             log_probs.append(log_prob)
             rewards.append(reward)
-            
-            # L'analyste s'entraîne à prédire le vrai chiffre à CHAQUE étape
-            true_label_tensor = torch.tensor([env.current_label], dtype=torch.long)
-            loss_c = criterion_class(class_logits, true_label_tensor)
-            class_losses.append(loss_c)
             
             last_entropy = current_entropy
             obs = next_obs
