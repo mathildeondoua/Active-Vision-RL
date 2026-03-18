@@ -47,7 +47,9 @@ def debug_viz():
         axes[0].text(px, py, str(i), color='red', fontsize=8)
     
     for i in range(n):
-        axes[i+1].imshow(history['patches'][i], cmap='gray', vmin=0, vmax=1)
+        # On force la forme (8,8) au cas où le squeeze a été trop violent
+        patch_to_show = history['patches'][i].reshape(8, 8)
+        axes[i+1].imshow(patch_to_show, cmap='gray', vmin=0, vmax=1)
         axes[i+1].set_title(f"T={i}")
     
     plt.savefig('debug_path.png')
