@@ -19,7 +19,7 @@ def main():
     optimizer = optim.Adam(agent.parameters(), lr=1e-3)
     criterion_class = nn.CrossEntropyLoss() # Pour entraîner l'Analyste
     
-    num_episodes = 500
+    num_episodes = 3000
     
     print("3. Début de l'entraînement hybride !")
     for episode in range(num_episodes):
