@@ -54,7 +54,7 @@ def main():
             
             # --- CALCUL DE LA RÉCOMPENSE INTELLIGENTE ---
             current_entropy = compute_entropy(class_logits)
-            
+            ENTROPY_SCALE = 5
             if action < 4 and not truncated: 
                 # C'est un mouvement ! Reward = (Baisse entropie) + pénalité de temps de l'env (-0.05)
                 entropy_drop = (last_entropy - current_entropy).item()
