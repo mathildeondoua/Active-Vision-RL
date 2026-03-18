@@ -83,7 +83,8 @@ class GlimpseEnv(gym.Env):
         # 2. Placer l'agent aléatoirement sur l'image
         #self.x = self.np_random.integers(0, self.image_size)
         #self.y = self.np_random.integers(0, self.image_size)
-        #self.step_count = 0
+        
+        self.step_count = 0
         white_pixels = np.argwhere(self.current_image > 0.5)
         if len(white_pixels) > 0:
             # On choisit un pixel blanc au hasard pour commencer "dans le vif du sujet"
